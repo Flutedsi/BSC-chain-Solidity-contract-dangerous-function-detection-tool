@@ -1,50 +1,50 @@
 import re
 import os
 import tempfile
-from web3 import Web3  # 链上验证
+from web3 import Web3
 from slither.slither import Slither
 import logging
 import sys
 from typing import List, Dict
-import requests  # DexScreener API
+import requests
 
-# 配置日志
+#配置日志
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# 危险函数/模式（加排除条件）
+#危险函数/模式（加排除）
 DANGER_PATTERNS = {
     'selfdestruct': {
         'pattern': r'selfdestruct\s*\(\s*payable\s*\(\s*[^)]+\)\s*\)',
         'string_match': r'selfdestruct',
-        'exclude': r'renounced|safe|emergency',  # 排除安全上下文
+        'exclude': r'renounced|safe|emergency',  #排除上下文
         'level': '高',
         'harm': 'Rug Pull: Owner can destroy contract and drain funds.'
     },
     'unlimited_approve': {
         'pattern': r'approve\s*\(\s*[^,]+,\s*type\s*\(\s*uint256\s*\)\.max\s*\)',
         'string_match': r'uint256\.max',
-        'exclude': r'safe|trusted|whitelist',  # 排除白名单场景
+        'exclude': r'safe|trusted|whitelist',  #排除白名单
         'level': '高',
         'harm': 'Unlimited Approval: Infinite spending risk.'
     },
     'owner_mint': {
         'pattern': r'_mint\s*\(\s*msg\.sender\s*,\s*[^)]+\)\s*',
         'string_match': r'_mint\s*\(\s*msg\.sender',
-        'exclude': r'fixed|initial|team',  # 排除初始 mint
+        'exclude': r'fixed|initial|team',  #排除初始mint
         'level': '高',
         'harm': 'Unlimited Mint: Supply dilution attack.'
     },
     'mode_switch': {
         'pattern': r'setMode|tradingEnabled|transferRestricted\s*\(\s*[^)]+\)\s*',
         'string_match': r'Transfer is restricted|Invalid transfer|unresolved_c5c03af3',
-        'exclude': r'renounced|decentralized|community',  # 排除去中心化模式
+        'exclude': r'renounced|decentralized|community',  #排除去中心化模式
         'level': '中',
         'harm': 'Trading Lock: Owner can disable transfers, trapping funds.'
     },
     'no_renounce': {
         'pattern': r'renounceOwnership\s*\{\s*\}\s*',
         'string_match': r'renounceOwnership',
-        'exclude': None,  # 无排除，始终中风险
+        'exclude': None,  #无排除，始终中风险
         'level': '中',
         'harm': 'Owner Retention: Full control retained.'
     }
@@ -54,7 +54,7 @@ class BSCContractAuditor:
     def __init__(self, source_file: str, ca: str = None):
         """从文件读取源码，可选 CA 链上查"""
         if not os.path.exists(source_file):
-            print(f"错误: 未找到 {source_file} 文件。请创建 {source_file} 并粘贴合约源代码。")
+            print(f"错误: 未找到 {source_file} 文件；请创建 {source_file} 并粘贴合约源代码。")
             sys.exit(1)
         with open(source_file, 'r', encoding='utf-8') as f:
             self.source = f.read()
@@ -64,7 +64,7 @@ class BSCContractAuditor:
         self.onchain_risk = self._check_onchain_risk(ca) if ca else {}
 
     def _clean_source(self, source: str) -> str:
-        """清理源码：移除 License、注释、var_ 混淆行"""
+        """清理源码：移除License、注释、var_ 混淆行"""
         lines = source.split('\n')
         cleaned = []
         in_license = False
@@ -76,10 +76,10 @@ class BSCContractAuditor:
             if in_license and line == '':
                 in_license = False
                 continue
-            # 跳过注释和 var_ 混淆行
+            #跳过注释和var_混淆行
             if line.startswith('//') or line.startswith('/*') or line.startswith('*/') or re.match(r'var_[a-z]', line):
                 continue
-            # 保留核心 Solidity
+            #保留核心Solidity
             if line.startswith('pragma') or line.startswith('contract') or line.startswith('function') or line.startswith('mapping') or line.startswith('event') or line.startswith('require') or line.startswith('emit') or line.startswith('storage_map'):
                 cleaned.append(line)
         return '\n'.join(cleaned)
@@ -88,18 +88,18 @@ class BSCContractAuditor:
         """自定义关键词检测危险函数（加排除逻辑）"""
         dangers = []
         for name, info in DANGER_PATTERNS.items():
-            # 正则匹配
+            #正则匹配
             matches = re.findall(info['pattern'], self.source, re.IGNORECASE | re.MULTILINE)
-            # 字符串匹配
+            #字符串匹配
             string_matches = re.findall(info['string_match'], self.source, re.IGNORECASE | re.MULTILINE)
             total_matches = len(matches) + len(string_matches)
             if total_matches > 0:
-                # 检查排除条件
+                #检查排除条件
                 if info.get('exclude'):
                     exclude_matches = re.findall(info['exclude'], self.source, re.IGNORECASE | re.MULTILINE)
                     if len(exclude_matches) > 0:
                         logging.info(f"{name} 匹配但有排除词 ({len(exclude_matches)} 次)，标记为低风险。")
-                        continue  # 排除假阳性
+                        continue  #排除假阳性
                 snippet = self._extract_snippet(info['string_match']) if string_matches else self._extract_snippet(info['pattern'])
                 dangers.append({
                     'function': name,
@@ -149,12 +149,12 @@ class BSCContractAuditor:
         w3 = Web3(Web3.HTTPProvider('https://bsc-dataseed.binance.org/'))
         ca = w3.to_checksum_address(ca)
         try:
-            # 查 owner (假设 ABI)
+            # 查owner(假设ABI)
             abi = [{"type":"function","name":"owner","inputs":[],"outputs":[{"type":"address"}]}]
             contract = w3.eth.contract(address=ca, abi=abi)
             owner = contract.functions.owner().call()
             renounced = owner == '0x0000000000000000000000000000000000000000'
-            # 查市值 (DexScreener API)
+            # 查市值(DexScreener API)
             dex_url = f"https://api.dexscreener.com/latest/dex/tokens/{ca}"
             response = requests.get(dex_url)
             market_cap = response.json().get('pairs', [{}])[0].get('marketCap', 'N/A') if response.ok else 'N/A'
