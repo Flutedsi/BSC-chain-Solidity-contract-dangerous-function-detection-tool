@@ -1,43 +1,43 @@
-# BSC Solidity Dangerous Function Auditor
+# BSC Solidity 危险函数检测工具
 
 [![Python Version](https://img.shields.io/badge/Python-3.8%2B-blue.svg)](https://www.python.org/) [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![Slither](https://img.shields.io/badge/Slither-0.9.7-green.svg)](https://github.com/crytic/slither)
 
-A lightweight Python script for quick security audits of BSC (BNB Smart Chain) Solidity smart contracts. It scans decompiled or source code to identify common rug pull indicators like trading locks, unlimited approvals, and unrenounced ownership. Combines keyword matching with Slither static analysis to generate **DeepSeek-style reports** with risk levels and actionable advice.
+一个轻量级 Python 脚本，用于快速审计 BSC (BNB Smart Chain) Solidity 智能合约的安全性。它扫描反编译或源代码，识别常见 rug pull 模式，如交易锁、无限授权和未放弃的 owner 权限。结合关键词匹配和 Slither 静态分析，生成报告，包含风险等级和实用建议。
 
-> **Why this tool?** In the wild world of BSC memes and tokens, a fast "red flag detector" can save you from Pixiu scams. Perfect for DYOR before that 10x moonshot!
+> **为什么用这个工具？** 在 BSC meme 和代币的狂野世界中，一个快速的“危险检测器”能帮你避开貔貅盘。完美用于 DYOR，在 10x 月球前先查查！
 
-## 🚀 Features
-- **Keyword Detection**: Identifies high-risk functions (e.g., `selfdestruct`, mode switches) with harm descriptions.
-- **Slither Integration**: Runs static analysis for reentrancy, access control, and more.
-- **DeepSeek-Style Reports**: Structured output with 🚨 risk badges, code snippets, and suggestions.
-- **File Input**: Simple local files (e.g., decompiled contracts from Heimdall-rs).
-- **Fallback Mode**: Handles non-compilable code gracefully.
+## 🚀 功能特点
+- **关键词检测**：识别高风险函数（e.g., `selfdestruct`、模式切换），附带危害描述。
+- **Slither 集成**：运行静态分析，检测重入、访问控制等漏洞。
+- **报告输出**：结构化输出，带 🚨 风险徽章、代码片段和建议。
+- **文件输入**：简单使用本地源代码文件（e.g., Heimdall-rs 反编译合约）。
+- **Fallback 模式**：处理不可编译代码。
 
-## 📦 Installation
-Ensure Python 3.8+ is installed.
+## 📦 安装
+确保 Python 3.8+ 已安装。
 
-### Dependencies
+### 依赖安装
 ```bash
-pip install slither-analyzer==0.9.7 web3 requests
+pip install slither-analyzer==0.9.6 web3 requests
 ```
 
-### Solidity Compiler (for Slither)
+### Solidity 编译器（Slither 用）
 ```bash
 pip install solc-select
 solc-select install 0.8.0
 solc-select use 0.8.0
 ```
 
-## 🚀 Quick Start
-1. Create a folder (e.g., `bsc-audit`).
-2. Save the script as `bsc-auditor.py`.
-3. Create `1.txt` and paste the Solidity source code (e.g., decompiled contract).
-4. Run:
+## 🚀 快速开始
+1. 创建文件夹（e.g., `bsc-audit`）。
+2. 将脚本保存为 `bsc-auditor.py`。
+3. 创建 `target.txt`，粘贴 Solidity 源代码（e.g., 反编译合约）。
+4. 运行：
    ```bash
    python bsc-auditor.py
    ```
 
-### Example Output
+### 示例输出
 ```
 ## 🚨 BSC 合约危险函数审计报告
 
@@ -56,21 +56,21 @@ require(unresolved_c5c03af3 - 0x01, "Token: Transfer is restricted");
 - access-control: Owner can call setMode to lock transfers.
 ```
 
-## ⚠️ Limitations
-- Optimized for decompiled code; may have false positives on obfuscated contracts.
-- Slither may skip non-compilable code (relies on keyword detection).
-- For full audits, pair with manual review, RugDoc, or TokenSniffer.
+## ⚠️ 局限性
+- 针对反编译代码优化；在混淆合约上可能有假阳性。
+- Slither 可能跳过不可编译代码（fallback 到关键词检测）。
+- 完整审计需结合手动审查、RugDoc 或 TokenSniffer。
 
-## 🤝 Contributing
-- Fork the repo and create a branch (`git checkout -b feature/AmazingFeature`).
-- Commit changes (`git commit -m 'Add some AmazingFeature'`).
-- Push to branch (`git push origin feature/AmazingFeature`).
-- Open a Pull Request!
+## 🤝 贡献
+- Fork 仓库，创建分支（`git checkout -b feature/AmazingFeature`）。
+- 提交变更（`git commit -m 'Add some AmazingFeature'`）。
+- 推送分支（`git push origin feature/AmazingFeature`）。
+- 开启 Pull Request！
 
-## 📄 License
-This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.
+## 📄 许可证
+本项目采用 MIT 许可证 - 详见 [LICENSE](LICENSE) 文件。
 
 ---
 
-**Built with ❤️ for Web3 safety. DYOR always!**  
-[GitHub Repo](https://github.com/Flutedsi/bsc-sol-auditor) | [Issues](https://github.com/Flutedsi/bsc-sol-auditor/issues)
+**用 ❤️ 为 Web3 安全而建。DYOR 永远！**  
+[GitHub 仓库](https://github.com/Flutedsi/BSC-chain-Solidity-contract-dangerous-function-detection-tool) | [问题反馈](https://github.com/Flutedsi/BSC-chain-Solidity-contract-dangerous-function-detection-tool/issues)
