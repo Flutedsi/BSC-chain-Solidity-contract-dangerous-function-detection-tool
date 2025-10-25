@@ -1,0 +1,4 @@
+temp.sol
+__pycache__/
+*.pyc
+.env
